@@ -1,0 +1,35 @@
+mainmodule reader {
+    readonly int numChares;
+    readonly size_t fileSize;
+    readonly std::string filename;
+    readonly size_t allocSize;
+    readonly size_t BUFF_SIZE;
+    readonly CProxy_Main mainProxy;
+    mainchare Main {
+        entry Main(CkArgMsg *);
+        entry void collectResults() {
+             when sumReduction(int n1, double sumTime[n]),
+                maxReduction(int n2, double maxTime[n]) {
+                     serial {
+                         CkPrintf("Timing fopen through fread:\n");
+                         CkPrintf("\tAverage time per chare: %f\n", sumTime[0] / (double)numChares);
+                         CkPrintf("\tMaximum time: %f\n", maxTime[0]);
+                         CkPrintf("Timing fread only:\n");
+                          CkPrintf("\tAverage time per chare: %f\n", sumTime[1] / (double)numChares);
+                          CkPrintf("\tMaximum time: %f\n", maxTime[1]);
+                          CkExit();
+                    }
+                 }
+            
+            
+        }
+        entry[reductiontarget] void sumReduction(int n, double sumTime[n]);
+        entry[reductiontarget] void maxReduction(int n, double maxTime[n]);
+
+    }
+    array[1D] Reader {
+        entry Reader();
+        entry void readFile();
+        
+    }
+}
