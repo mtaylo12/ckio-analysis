@@ -27,17 +27,17 @@ public:
         numChares = atoi(msg->argv[1]);
         fileSize = (size_t) atoi(msg->argv[2]) * 1024 * 1024 * 1024;
         std::string fn(msg->argv[3]);
-	BUFF_SIZE = (size_t) 1024*1024*1024 * atoi(msg->argv[4]);
+		BUFF_SIZE = (size_t) 1024*1024*1024 * atoi(msg->argv[4]);
 	
         filename = fn;
-        allocSize = (size_t) ceil(fileSize / (double)numChares);
+        allocSize = (size_t) (fileSize / (double)numChares);
         mainProxy = thisProxy;
 
         CkPrintf("<Main> Reading %s (%jd bytes)\n", filename.c_str());
 	CkPrintf("<Main> Using with %d chares (each chare reads %d bytes)\n", numChares, allocSize);
 	CkPrintf("<Main> Buffer size: %zu\n", BUFF_SIZE);
 
-        CProxy_Reader reader = CProxy_Reader::ckNew(numChares);
+        CProxy_Reader reader = CProxy_Reader::ckNew(numChares, numChares);
         reader.readFile();
 
         thisProxy.collectResults();
@@ -49,16 +49,20 @@ class Reader : public CBase_Reader
 {
 private:
     size_t offset;
+	size_t my_buffer_size;
     char *buffer;
 
 public:
-    Reader()
+    Reader(size_t num_chares)
     {
 
       offset = (size_t) thisIndex * allocSize;
-      
+     	buffer_size = allocSize;
+		if(thisIndex == (num_chares - 1){
+			my_buffer_size = fileSize - offset; // I'm the last chare, read everything
+		}
         // setup buffer to read to
-        buffer = (char *)malloc(BUFF_SIZE);
+        buffer = (char *)malloc(my_buffer_size);
         if (buffer == NULL)
         {
             CkPrintf("<Reader> Error: cannot allocate buffer.\n");
@@ -88,10 +92,12 @@ public:
         double fread_time = CkWallTimer();
 	size_t bytes_read;
 	size_t total_bytes_read = 0;
-	while ((bytes_read = fread(buffer, 1, BUFF_SIZE, fp)) && total_bytes_read < allocSize) {
-	  if (bytes_read != BUFF_SIZE)
+	while ( && total_bytes_read < my_buffer_size) {
+	  size_t bytes_to_read = std::min(BUFF_SIZE, (my_buffer_size - total_bytes_read));
+	  bytes_read = fread(buffer, 1, bytes_to_read, fp));
+	  if (bytes_read != bytes_to_read)
 	    {
-	      CkPrintf("<Reader> Error: read failed - bytes read = %zu and bytes expected = %zu.\n",bytes_read, BUFF_SIZE);
+	      CkPrintf("<Reader> Error: read failed - bytes read = %zu and bytes expected = %zu.\n",bytes_read, bytes_to_read);
 	    }
 	  total_bytes_read += (size_t) bytes_read;
 	}

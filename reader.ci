@@ -28,7 +28,7 @@ mainmodule reader {
 
     }
     array[1D] Reader {
-        entry Reader();
+        entry Reader(size_t num_chares);
         entry void readFile();
         
     }
