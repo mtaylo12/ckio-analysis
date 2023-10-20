@@ -2,8 +2,7 @@ mainmodule reader {
     readonly int numChares;
     readonly size_t fileSize;
     readonly std::string filename;
-    readonly size_t allocSize;
-    readonly size_t BUFF_SIZE;
+    readonly size_t allocFloor;
     readonly CProxy_Main mainProxy;
     mainchare Main {
         entry Main(CkArgMsg *);
@@ -28,7 +27,7 @@ mainmodule reader {
 
     }
     array[1D] Reader {
-        entry Reader(size_t num_chares);
+        entry Reader();
         entry void readFile();
         
     }

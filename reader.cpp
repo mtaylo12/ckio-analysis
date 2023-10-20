@@ -5,9 +5,8 @@
 /*readonly*/ int numChares;
 /*readonly*/ size_t fileSize; // in bytes
 /*readonly*/ std::string filename;
-/*readonly*/ size_t allocSize; // size of chare allocation
+/*readonly*/ size_t allocFloor; // size of chare allocation (floor)
 /*readonly*/ CProxy_Main mainProxy;
-/*readonly*/ size_t BUFF_SIZE;
   
 class Main : public CBase_Main
 {
@@ -17,9 +16,9 @@ class Main : public CBase_Main
 public:
     Main(CkArgMsg *msg)
     {
-        if (msg->argc != 5)
+        if (msg->argc != 4)
         {
-            CkPrintf("<Main> %s: expecting three arguments:\n\t<N> number of chares\n\t<K> input file size (GB)\t<F> filename\n\t<B> buffer size (GB) ",
+            CkPrintf("<Main> %s: expecting three arguments:\n\t<N> number of chares\n\t<K> input file size (GB)\t<F> filename\n",
                      msg->argv[0]);
             CkExit();
         }
@@ -27,17 +26,14 @@ public:
         numChares = atoi(msg->argv[1]);
         fileSize = (size_t) atoi(msg->argv[2]) * 1024 * 1024 * 1024;
         std::string fn(msg->argv[3]);
-		BUFF_SIZE = (size_t) 1024*1024*1024 * atoi(msg->argv[4]);
 	
         filename = fn;
-        allocSize = (size_t) (fileSize / (double)numChares);
+        allocFloor = (size_t) (fileSize / (double)numChares);
         mainProxy = thisProxy;
 
         CkPrintf("<Main> Reading %s (%jd bytes)\n", filename.c_str());
-	CkPrintf("<Main> Using with %d chares (each chare reads %d bytes)\n", numChares, allocSize);
-	CkPrintf("<Main> Buffer size: %zu\n", BUFF_SIZE);
 
-        CProxy_Reader reader = CProxy_Reader::ckNew(numChares, numChares);
+        CProxy_Reader reader = CProxy_Reader::ckNew(numChares);
         reader.readFile();
 
         thisProxy.collectResults();
@@ -48,25 +44,32 @@ public:
 class Reader : public CBase_Reader
 {
 private:
-    size_t offset;
-	size_t my_buffer_size;
-    char *buffer;
+  size_t offset;
+  size_t my_buffer_size;
+  char *buffer;
 
 public:
-    Reader(size_t num_chares)
+    Reader()
     {
 
-      offset = (size_t) thisIndex * allocSize;
-     	buffer_size = allocSize;
-		if(thisIndex == (num_chares - 1){
-			my_buffer_size = fileSize - offset; // I'm the last chare, read everything
-		}
-        // setup buffer to read to
-        buffer = (char *)malloc(my_buffer_size);
-        if (buffer == NULL)
+      int numOverflow = fileSize % numChares;
+      if (thisIndex < numOverflow) {
+	my_buffer_size = allocFloor + 1;
+	offset = (size_t) thisIndex * (allocFloor + 1);
+      }
+      else {
+	my_buffer_size = allocFloor;
+	offset = (size_t) numOverflow * (allocFloor + 1) + (thisIndex - numOverflow) * allocFloor;
+      }
+
+      CkPrintf("Chare %d with alloc size %zu and offset %zu\n", thisIndex, my_buffer_size, offset);
+      
+      // setup buffer to read to
+      buffer = (char *)malloc(my_buffer_size);
+      if (buffer == NULL)
         {
-            CkPrintf("<Reader> Error: cannot allocate buffer.\n");
-            CkExit();
+	  CkPrintf("<Reader> Error: cannot allocate buffer.\n");
+	  CkExit();
         }
     }
     void readFile()
@@ -92,21 +95,17 @@ public:
         double fread_time = CkWallTimer();
 	size_t bytes_read;
 	size_t total_bytes_read = 0;
-	while ( && total_bytes_read < my_buffer_size) {
-	  size_t bytes_to_read = std::min(BUFF_SIZE, (my_buffer_size - total_bytes_read));
-	  bytes_read = fread(buffer, 1, bytes_to_read, fp));
-	  if (bytes_read != bytes_to_read)
-	    {
-	      CkPrintf("<Reader> Error: read failed - bytes read = %zu and bytes expected = %zu.\n",bytes_read, bytes_to_read);
-	    }
-	  total_bytes_read += (size_t) bytes_read;
-	}
+
+	
+	bytes_read = fread(buffer, 1, my_buffer_size, fp);
+	if (bytes_read != my_buffer_size)
+	  {
+	    CkPrintf("<Reader> Error: read failed - bytes read = %zu and bytes expected = %zu.\n",bytes_read, my_buffer_size);
+	  }
+	
 	total_time = CkWallTimer() - total_time;
 	fread_time = CkWallTimer() - fread_time;
 	
-	if (total_bytes_read != allocSize) {
-	  CkPrintf("<Reader> Error: total bytes read (%jd) doesn't match allocation size (%jd).\n", total_bytes_read, allocSize);
-	}
 	
         fclose(fp);
         free(buffer);
