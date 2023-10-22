@@ -10,7 +10,7 @@ TO SUBMIT TESTS:
 2) make
 3) ./slurm-tools/submit-all.sh <filepath> <test-config> <filesize>
    - filepath should be the full path to the input file
-   - test-config will be the name of the output dir in ./output (this can be used to denote test config, eg. "8GBnosmp")
+   - test-config will be the name of the output dir in ./output (eg. "8GBnosmp")
    - filesize should correspond to the input file size in GB
    - then wait for jobs to finish...
 4) python3 ./slurm-tools/format-results.py <test-config>
