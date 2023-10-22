@@ -1,0 +1,18 @@
+TEST FORMAT
+- multiple chares (single chare per node with -ntasks-per-node=1)
+- each chare reads from separate section of file with single fread call
+- time the individual freads and time from fopen through fread, collecting max and average results with a reduction
+
+IMPORTANT: script error handling is not done! follow the instructions or weird things will happen!
+
+TO SUBMIT TESTS:
+1) cd ckio-analysis
+2) make
+3) ./slurm-tools/submit-all <filepath> <test-config> <filesize>
+   - filepath should be the full path to the input file
+   - test-config will be the name of the output dir in ./output
+   - filesize should correspond to the input file size in GB
+   - then wait for jobs to finish...
+4) python3 ./slurm-tools/format-results.py <test-config>
+   - this script formats the output into a table and prints it
+   - mostly for easy copy paste to excel
