@@ -12,4 +12,4 @@ $(HEADERS): $(CI_FILE)
 	charmc $^
 
 clean:
-	rm -f charmrun $(HEADERS) $(EXEC) 
+	rm -f charmrun $(HEADERS) $(EXEC) slurm-tools/reader-*.slurm
