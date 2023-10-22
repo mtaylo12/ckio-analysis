@@ -8,7 +8,7 @@ IMPORTANT: script error handling is not done! follow the instructions or weird t
 TO SUBMIT TESTS:
 1) cd ckio-analysis
 2) make
-3) ./slurm-tools/submit-all <filepath> <test-config> <filesize>
+3) ./slurm-tools/submit-all.sh <filepath> <test-config> <filesize>
    - filepath should be the full path to the input file
    - test-config will be the name of the output dir in ./output
    - filesize should correspond to the input file size in GB
