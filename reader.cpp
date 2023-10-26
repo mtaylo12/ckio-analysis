@@ -31,7 +31,7 @@ public:
         allocFloor = (size_t) (fileSize / (double)numChares);
         mainProxy = thisProxy;
 
-        CkPrintf("<Main> Reading %s (%jd bytes)\n", filename.c_str());
+        CkPrintf("<Main> Reading %s (%jd bytes)\n", filename.c_str(), fileSize);
 
         CProxy_Reader reader = CProxy_Reader::ckNew(numChares);
         reader.readFile();
@@ -62,8 +62,6 @@ public:
 	offset = (size_t) numOverflow * (allocFloor + 1) + (thisIndex - numOverflow) * allocFloor;
       }
 
-      CkPrintf("Chare %d with alloc size %zu and offset %zu\n", thisIndex, my_buffer_size, offset);
-      
       // setup buffer to read to
       buffer = (char *)malloc(my_buffer_size);
       if (buffer == NULL)
@@ -88,6 +86,7 @@ public:
         if (fseek_err)
         {
             CkPrintf("<Reader> Error: fseeko failed.\n");
+	    CkExit();
         }
 
         // read allocation
@@ -101,6 +100,7 @@ public:
 	if (bytes_read != my_buffer_size)
 	  {
 	    CkPrintf("<Reader> Error: read failed - bytes read = %zu and bytes expected = %zu.\n",bytes_read, my_buffer_size);
+	    CkExit();
 	  }
 	
 	total_time = CkWallTimer() - total_time;
