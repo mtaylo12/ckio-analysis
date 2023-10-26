@@ -8,11 +8,17 @@ IMPORTANT: script error handling is not done! follow the instructions or weird t
 TO SUBMIT TESTS:
 1) cd ckio-analysis
 2) make
-3) ./slurm-tools/submit-all.sh <filepath> <test-config> <filesize>
+3) ./slurm-tools/submit-job.sh <filepath> <test-config> <filesize> <mem-per-node> <number-of-nodes> 
    - filepath should be the full path to the input file
    - test-config will be the name of the output dir in ./output (this can be used to denote test config, for exmaple "8GBnosmp")
    - filesize should correspond to the input file size in GB
-   - then wait for jobs to finish...
+   - mem-per-node should be formatted like <x>g for some number of GB per node, or <x>m for MB (each node needs at least as much memory for buffer)
+   - number-of-nodes is self explanatory
+   - then wait for job to finish
 4) python3 ./slurm-tools/format-results.py <test-config>
-   - this script formats the output into a table and prints it
+   - this script formats the output for an entire directory into a table and prints it
    - mostly for easy copy paste to excel
+
+FOR EXAMPLE:
+   - ./slurm-tools/submit-job.sh /scratch/mzu/mtaylor2/32GB.txt test32GB 32 1g 64
+   - python3 ./slurm-tools/format-results.py test32GB
