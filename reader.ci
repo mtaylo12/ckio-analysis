@@ -8,14 +8,16 @@ mainmodule reader {
         entry Main(CkArgMsg *);
         entry void collectResults() {
              when sumReduction(int n1, double sumTime[n]),
-                maxReduction(int n2, double maxTime[n]) {
-                     serial {
+                maxReduction(int n2, double maxTime[n]),
+		minReduction(int n2, double minTime[n]) {
+		serial {	 
                          CkPrintf("Timing fopen through fread:\n");
                          CkPrintf("\tAverage time per chare: %f\n", sumTime[0] / (double)numChares);
                          CkPrintf("\tMaximum time: %f\n", maxTime[0]);
+		         CkPrintf("\tMinimum time: %f\n", minTime[0]);	
                          CkPrintf("Timing fread only:\n");
-                          CkPrintf("\tAverage time per chare: %f\n", sumTime[1] / (double)numChares);
-                          CkPrintf("\tMaximum time: %f\n", maxTime[1]);
+                          CkPrintf("\tAverage time per chare | Maximum time | Minimum time\n");
+                          CkPrintf("\t%f | %f | %f\n", sumTime[1] / numChares, maxTime[1], minTime[1]);
                           CkExit();
                     }
                  }
@@ -23,7 +25,8 @@ mainmodule reader {
             
         }
         entry[reductiontarget] void sumReduction(int n, double sumTime[n]);
-        entry[reductiontarget] void maxReduction(int n, double maxTime[n]);
+	entry[reductiontarget] void minReduction(int n, double sumTime[n]);
+	entry[reductiontarget] void maxReduction(int n, double maxTime[n]);
 
     }
     array[1D] Reader {

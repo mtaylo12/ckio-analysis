@@ -1,6 +1,9 @@
 #include <fstream>
 
 #include "reader.decl.h"
+//#define _XOPEN_SOURCE 600
+#include <unistd.h>
+#include <fcntl.h>
 
 /*readonly*/ int numChares;
 /*readonly*/ size_t fileSize; // in bytes
@@ -12,7 +15,18 @@ class Main : public CBase_Main
 {
     Main_SDAG_CODE
         CProxy_Reader reader;
-
+private:
+  void clearCache() {
+    int fd;
+    fd = open(filename.c_str(), O_RDONLY);
+    fdatasync(fd);
+    int err = posix_fadvise(fd, 0,0,POSIX_FADV_DONTNEED);
+    if (err != 0) {
+      CkPrintf("ERROR: posix_fadvise failed.\n");
+      CkExit();
+    }
+    close(fd);
+  }
 public:
     Main(CkArgMsg *msg)
     {
@@ -33,7 +47,10 @@ public:
 
         CkPrintf("<Main> Reading %s (%jd bytes)\n", filename.c_str(), fileSize);
 
-        CProxy_Reader reader = CProxy_Reader::ckNew(numChares);
+	//clearCache();
+	//sleep(10);
+
+	CProxy_Reader reader = CProxy_Reader::ckNew(numChares);
         reader.readFile();
 
         thisProxy.collectResults();
@@ -117,6 +134,9 @@ public:
 
         CkCallback maxCb(CkReductionTarget(Main, maxReduction), mainProxy);
         contribute(2 * sizeof(double), sums, CkReduction::max_double, maxCb);
+
+	CkCallback minCb(CkReductionTarget(Main, minReduction), mainProxy);
+	contribute(2 * sizeof(double), sums, CkReduction::min_double, minCb);
     }
 };
 

@@ -8,24 +8,32 @@ args = parser.parse_args()
 
 outdir = args.outdir
 
-def extract_row(filename):
+def extract_result(filename):
     with open(filename, 'r') as file:
         lines = file.readlines()
-        average_total = lines[-6].split()[-1]
-        max_total = lines[-5].split()[-1]
-        average_fread = lines[-3].split()[-1]
-        max_fread = lines[-2].split()[-1]
+        min_fread = lines[-2].split()[-1]
+        average_fread = lines[-2].split()[-5]
+        max_fread = lines[-2].split()[-3]
 
-        return [average_total, max_total, average_fread, max_fread]
+        return[float(average_fread), float(max_fread)]
 
 
-all_data = [["avg(total)", "max(total)", "avg(fread)", "max(fread)"]]
-for node in [1, 2, 4, 8, 16, 32, 48, 64, 72, 80, 88, 96, 112]:
-    filename = "output/" + outdir + "/" + str(node) + ".txt"
-    if os.path.exists(filename):
-        row = extract_row(filename)
-        row.insert(0, node)
-        all_data.append(row)
+print("results in range (1,100) averageing over 10 sols")
+for tasks in range(1, 100):
+    acc_average = 0
+    acc_max = 0
+    numresults = 0
 
-for row in all_data:
-    print(' '.join(str(i) for i in row))
+    for i in range(1, 11):
+        filename = str(outdir) + str(tasks) + "task-run" + str(i) + ".txt"
+        if os.path.exists(filename):
+            [average, maximum] = extract_result(filename)
+            acc_average += average
+            acc_max += maximum
+            numresults += 1
+
+    if (numresults != 0):
+        acc_average = acc_average / numresults
+        acc_max = acc_max / numresults
+
+        print(tasks, acc_average, acc_max)
